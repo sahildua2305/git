@@ -486,6 +486,8 @@ int cmd_describe(int argc, const char **argv, const char *prefix)
 				 NULL);
 		if (always)
 			argv_array_push(&args, "--always");
+		if (debug)
+			argv_array_push(&args, "--debug");
 		if (!all) {
 			argv_array_push(&args, "--tags");
 			for_each_string_list_item(item, &patterns)
