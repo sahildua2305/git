@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# An example hook script to integrate Watchman
+# (https://facebook.github.io/watchman/) with git to provide fast
+# git status.
+#
+# The hook is passed a time in nanoseconds formatted as a string and
+# outputs to stdout all files that have been modified since the given
+# time. Paths must be relative to the root of the working tree and
+# separated by a single NUL.
+#
+# To enable this hook, rename this file to "query-fsmonitor"
+
+# check the hook interface version
+if [ $1 -eq 1 ]
+then
+	# convert nanoseconds to seconds
+	time_t=$(($2/1000000000))
+else
+	echo -e "Unsupported query-fsmonitor hook version.\nFalling back to scanning...\n" >&2
+	exit 1;
+fi
+
+# Convert unix style paths to escaped Windows style paths
+case "$(uname -s)" in
+MINGW*|MSYS_NT*)
+  GIT_WORK_TREE="$(cygpath -aw "$PWD" | sed 's,\\,\\\\,g')"
+  ;;
+*)
+  GIT_WORK_TREE="$PWD"
+  ;;
+esac
+
+# Query Watchman for all the changes since the requested time
+echo "[\"query\", \"$GIT_WORK_TREE\", {\"since\": $time_t, \"fields\":[\"name\"]}]" | \
+watchman -j | \
+perl -e 'use JSON::PP; my $o = JSON::PP->new->utf8->decode(join("", <>)); die "Watchman: $o->{'error'}.\nFalling back to scanning...\n" if defined($o->{"error"}); print(join("\0", @{$o->{"files"}}));'
