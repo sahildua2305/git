@@ -2442,42 +2442,62 @@ static int files_reflog_iterator_advance(struct ref_iterator *ref_iterator)
 	struct dir_iterator *diter = iter->dir_iterator;
 	int ok;
 
-	while ((ok = dir_iterator_advance(diter)) == ITER_OK) {
-		int flags;
+	if (!iter->dir_iterator) {
+		/*
+		 * If our dir_iterator is NULL at this stage, it means we failed
+		 * to open the given path at dir_iterator_begin(), most likely due
+		 * to it not existing.
+		 *
+		 * In this case, we pretend it was an empty directory and just
+		 * iterate through nothing.
+		 */
+		ok = ITER_DONE;
+	} else {
+		while ((ok = dir_iterator_advance(diter)) == ITER_OK) {
+			int flags;
 
-		if (!S_ISREG(diter->st.st_mode))
-			continue;
-		if (diter->basename[0] == '.')
-			continue;
-		if (ends_with(diter->basename, ".lock"))
-			continue;
-
-		if (iter->worktree_dir_iterator) {
-			const char *refname = diter->relative_path;
-
-			switch (ref_type(refname)) {
-			case REF_TYPE_PER_WORKTREE:
-			case REF_TYPE_PSEUDOREF:
+			if (!S_ISREG(diter->st.st_mode))
 				continue;
-			case REF_TYPE_NORMAL:
-				break;
-			default:
-				die("BUG: unknown ref type %d of ref %s",
-				    ref_type(refname), refname);
+			if (diter->basename[0] == '.')
+				continue;
+			if (ends_with(diter->basename, ".lock"))
+				continue;
+
+			if (read_ref_full(diter->relative_path, 0,
+					  iter->oid.hash, &flags)) {
+				error("bad ref for %s", diter->path.buf);
+				continue;
 			}
+
+			if (iter->worktree_dir_iterator) {
+				const char *refname = diter->relative_path;
+
+				switch (ref_type(refname)) {
+				case REF_TYPE_PER_WORKTREE:
+				case REF_TYPE_PSEUDOREF:
+					continue;
+				case REF_TYPE_NORMAL:
+					break;
+				default:
+					die("BUG: unknown ref type %d of ref %s",
+					    ref_type(refname), refname);
+				}
+			}
+
+			if (refs_read_ref_full(iter->ref_store,
+					       diter->relative_path, 0,
+					       iter->oid.hash, &flags)) {
+				error("bad ref for %s", diter->path.buf);
+				continue;
+			}
+
+			iter->base.refname = diter->relative_path;
+			iter->base.oid = &iter->oid;
+			iter->base.flags = flags;
+			return ITER_OK;
 		}
 
-		if (refs_read_ref_full(iter->ref_store,
-				       diter->relative_path, 0,
-				       iter->oid.hash, &flags)) {
-			error("bad ref for %s", diter->path.buf);
-			continue;
-		}
-
-		iter->base.refname = diter->relative_path;
-		iter->base.oid = &iter->oid;
-		iter->base.flags = flags;
-		return ITER_OK;
+		iter->dir_iterator = NULL;
 	}
 
 	iter->dir_iterator = iter->worktree_dir_iterator;
@@ -2532,13 +2552,13 @@ static struct ref_iterator *files_reflog_iterator_begin(struct ref_store *ref_st
 
 	base_ref_iterator_init(ref_iterator, &files_reflog_iterator_vtable);
 	strbuf_addf(&sb, "%s/logs", refs->gitcommondir);
-	iter->dir_iterator = dir_iterator_begin(sb.buf);
+	iter->dir_iterator = dir_iterator_begin(sb.buf, 0);
 	iter->ref_store = ref_store;
 	strbuf_release(&sb);
 
 	if (strcmp(refs->gitdir, refs->gitcommondir)) {
 		strbuf_addf(&sb, "%s/logs", refs->gitdir);
-		iter->worktree_dir_iterator = dir_iterator_begin(sb.buf);
+		iter->worktree_dir_iterator = dir_iterator_begin(sb.buf, 0);
 		strbuf_release(&sb);
 	}
 

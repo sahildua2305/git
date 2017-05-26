@@ -5,19 +5,17 @@
  * Iterate over a directory tree.
  *
  * Iterate over a directory tree, recursively, including paths of all
- * types and hidden paths. Skip "." and ".." entries and don't follow
- * symlinks except for the original path.
+ * types and hidden paths. Skip "." and ".." entries.
  *
  * Every time dir_iterator_advance() is called, update the members of
  * the dir_iterator structure to reflect the next path in the
  * iteration. The order that paths are iterated over within a
- * directory is undefined, but directory paths are always iterated
- * over before the subdirectory contents.
+ * directory is undefined.
  *
  * A typical iteration looks like this:
  *
  *     int ok;
- *     struct iterator *iter = dir_iterator_begin(path);
+ *     struct iterator *iter = dir_iterator_begin(path, flags);
  *
  *     while ((ok = dir_iterator_advance(iter)) == ITER_OK) {
  *             if (want_to_stop_iteration()) {
@@ -38,6 +36,26 @@
  * dir_iterator_advance() again.
  */
 
+/*
+ * Possible flags for dir_iterator_begin().
+ *
+ * * DIR_ITERATOR_PRE_ORDER_TRAVERSAL: the iterator shall return
+ * a dirpath it has found before iterating through that directory's
+ * contents.
+ * * DIR_ITERATOR_POST_ORDER_TRAVERSAL: the iterator shall return
+ * a dirpath it has found after iterating through that directory's
+ * contents.
+ * * DIR_ITERATOR_LIST_ROOT_DIR: the iterator shall return the dirpath
+ * of the root directory it is iterating through if either
+ * DIR_ITERATOR_PRE_ORDER_TRAVERSAL or DIR_ITERATOR_POST_ORDER_TRAVERSAL
+ * is set.
+ *
+ * All flags can be used in any combination.
+ */
+#define DIR_ITERATOR_PRE_ORDER_TRAVERSAL (1 << 0)
+#define DIR_ITERATOR_POST_ORDER_TRAVERSAL (1 << 1)
+#define DIR_ITERATOR_LIST_ROOT_DIR (1 << 2)
+
 struct dir_iterator {
 	/* The current path: */
 	struct strbuf path;
@@ -57,15 +75,16 @@ struct dir_iterator {
 };
 
 /*
- * Start a directory iteration over path. Return a dir_iterator that
- * holds the internal state of the iteration.
+ * Start a directory iteration over path, with options specified in
+ * 'flags'. Return a dir_iterator that holds the internal state of
+ * the iteration.
  *
  * The iteration includes all paths under path, not including path
  * itself and not including "." or ".." entries.
  *
  * path is the starting directory. An internal copy will be made.
  */
-struct dir_iterator *dir_iterator_begin(const char *path);
+struct dir_iterator *dir_iterator_begin(const char *path, unsigned flags);
 
 /*
  * Advance the iterator to the first or next item and return ITER_OK.
