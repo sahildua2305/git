@@ -341,6 +341,59 @@ test_expect_success 'config information was renamed, too' '
 	test_must_fail git config branch.s/s/dummy
 '
 
+test_expect_success 'git branch -c dumps usage' '
+	test_expect_code 128 git branch -c 2>err &&
+	test_i18ngrep "branch name required" err
+'
+
+git config branch.d.dummy Hello
+
+test_expect_success 'git branch -c d e should work' '
+	git branch -l d &&
+	git reflog exists refs/heads/d &&
+	git branch -c d e &&
+	git reflog exists refs/heads/d &&
+	git reflog exists refs/heads/e
+'
+
+test_expect_success 'config information was copied, too' '
+	test $(git config branch.e.dummy) = Hello &&
+	test $(git config branch.d.dummy) = Hello
+'
+
+git config branch.f/f.dummy Hello
+
+test_expect_success 'git branch -c f/f g/g should work' '
+	git branch -l f/f &&
+	git reflog exists refs/heads/f/f &&
+	git branch -c f/f g/g &&
+	git reflog exists refs/heads/f/f &&
+	git reflog exists refs/heads/g/g
+'
+
+test_expect_success 'config information was copied, too' '
+	test $(git config branch.f/f.dummy) = Hello &&
+	test $(git config branch.g/g.dummy) = Hello
+'
+
+test_expect_success 'git branch -c m2 m2 should work' '
+	git branch -l m2 &&
+	git reflog exists refs/heads/m2 &&
+	git branch -c m2 m2 &&
+	git reflog exists refs/heads/m2
+'
+
+test_expect_success 'git branch -c a a/a should fail' '
+	git branch -l a &&
+	git reflog exists refs/heads/a &&
+	test_must_fail git branch -c a a/a
+'
+
+test_expect_success 'git branch -c b/b b should fail' '
+	git branch -l b/b &&
+	test_must_fail git branch -c b/b b
+'
+
 test_expect_success 'deleting a symref' '
 	git branch target &&
 	git symbolic-ref refs/heads/symref refs/heads/target &&
