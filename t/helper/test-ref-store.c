@@ -107,7 +107,7 @@ static int cmd_rename_ref(struct ref_store *refs, const char **argv)
 	const char *newref = notnull(*argv++, "newref");
 	const char *logmsg = *argv++;
 
-	return refs_rename_ref(refs, oldref, newref, logmsg);
+	return refs_copy_or_rename_ref(refs, oldref, newref, logmsg, 0);
 }
 
 static int each_ref(const char *refname, const struct object_id *oid,

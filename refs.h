@@ -394,9 +394,10 @@ const char *prettify_refname(const char *refname);
 char *shorten_unambiguous_ref(const char *refname, int strict);
 
 /** rename ref, return 0 on success **/
-int refs_rename_ref(struct ref_store *refs, const char *oldref,
-		    const char *newref, const char *logmsg);
-int rename_ref(const char *oldref, const char *newref, const char *logmsg);
+int refs_copy_or_rename_ref(struct ref_store *refs, const char *oldref,
+		    const char *newref, const char *logmsg, int copy);
+int copy_or_rename_ref(const char *oldref, const char *newref,
+			const char *logmsg, int copy);
 
 int refs_create_symref(struct ref_store *refs, const char *refname,
 		       const char *target, const char *logmsg);

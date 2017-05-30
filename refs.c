@@ -1907,13 +1907,13 @@ int delete_refs(struct string_list *refnames, unsigned int flags)
 	return refs_delete_refs(get_main_ref_store(), refnames, flags);
 }
 
-int refs_rename_ref(struct ref_store *refs, const char *oldref,
-		    const char *newref, const char *logmsg)
+int refs_copy_or_rename_ref(struct ref_store *refs, const char *oldref,
+		    const char *newref, const char *logmsg, int copy)
 {
-	return refs->be->rename_ref(refs, oldref, newref, logmsg);
+	return refs->be->copy_or_rename_ref(refs, oldref, newref, logmsg, copy);
 }
 
-int rename_ref(const char *oldref, const char *newref, const char *logmsg)
+int copy_or_rename_ref(const char *oldref, const char *newref, const char *logmsg, int copy)
 {
-	return refs_rename_ref(get_main_ref_store(), oldref, newref, logmsg);
+	return refs_copy_or_rename_ref(get_main_ref_store(), oldref, newref, logmsg, copy);
 }
