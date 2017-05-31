@@ -2624,7 +2624,7 @@ static int section_name_is_ok(const char *name)
 
 /* if new_name == NULL, the section is removed instead */
 int git_config_copy_or_rename_section_in_file(const char *config_filename,
-				      const char *old_name, const char *new_name)
+				      const char *old_name, const char *new_name, int copy)
 {
 	int ret = 0, remove = 0;
 	char *filename_buf = NULL;
@@ -2724,9 +2724,9 @@ out_no_rollback:
 	return ret;
 }
 
-int git_config_copy_or_rename_section(const char *old_name, const char *new_name)
+int git_config_copy_or_rename_section(const char *old_name, const char *new_name, int copy)
 {
-	return git_config_copy_or_rename_section_in_file(NULL, old_name, new_name);
+	return git_config_copy_or_rename_section_in_file(NULL, old_name, new_name, copy);
 }
 
 /*

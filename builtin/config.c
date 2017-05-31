@@ -691,7 +691,7 @@ int cmd_config(int argc, const char **argv, const char *prefix)
 		check_write();
 		check_argc(argc, 2, 2);
 		ret = git_config_copy_or_rename_section_in_file(given_config_source.file,
-							argv[0], argv[1]);
+							argv[0], argv[1], 0);
 		if (ret < 0)
 			return ret;
 		if (ret == 0)
@@ -702,7 +702,7 @@ int cmd_config(int argc, const char **argv, const char *prefix)
 		check_write();
 		check_argc(argc, 1, 1);
 		ret = git_config_copy_or_rename_section_in_file(given_config_source.file,
-							argv[0], NULL);
+							argv[0], NULL, 0);
 		if (ret < 0)
 			return ret;
 		if (ret == 0)

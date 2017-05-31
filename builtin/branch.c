@@ -176,7 +176,7 @@ static void delete_branch_config(const char *branchname)
 {
 	struct strbuf buf = STRBUF_INIT;
 	strbuf_addf(&buf, "branch.%s", branchname);
-	if (git_config_copy_or_rename_section(buf.buf, NULL) < 0)
+	if (git_config_copy_or_rename_section(buf.buf, NULL, 0) < 0)
 		warning(_("Update of config-file failed"));
 	strbuf_release(&buf);
 }
@@ -502,7 +502,7 @@ static void copy_or_rename_branch(const char *oldname, const char *newname, int 
 	strbuf_release(&oldref);
 	strbuf_addf(&newsection, "branch.%s", newref.buf + 11);
 	strbuf_release(&newref);
-	if (git_config_copy_or_rename_section(oldsection.buf, newsection.buf) < 0)
+	if (git_config_copy_or_rename_section(oldsection.buf, newsection.buf, copy) < 0)
 		die(_("Branch is %s, but update of config-file failed"),
 			 (copy ? "copied" : "renamed"));
 	strbuf_release(&oldsection);
