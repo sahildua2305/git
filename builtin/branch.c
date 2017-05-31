@@ -502,7 +502,7 @@ static void copy_or_rename_branch(const char *oldname, const char *newname, int 
 	strbuf_release(&oldref);
 	strbuf_addf(&newsection, "branch.%s", newref.buf + 11);
 	strbuf_release(&newref);
-	if (git_config_copy_or_rename_section(oldsection.buf, newsection.buf, copy) < 0)
+	if (strcmp(oldname, newname) && git_config_copy_or_rename_section(oldsection.buf, newsection.buf, copy) < 0)
 		die(_("Branch is %s, but update of config-file failed"),
 			 (copy ? "copied" : "renamed"));
 	strbuf_release(&oldsection);
